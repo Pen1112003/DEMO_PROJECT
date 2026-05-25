@@ -28,7 +28,8 @@ public class VehicleTypeController {
     private static final Pattern CODE_PATTERN = Pattern.compile("^[A-Z0-9_]{2,30}$");
     private static final String STATUS_ACTIVE = "active";
     private static final String STATUS_INACTIVE = "inactive";
-    private static final UUID DEFAULT_USER = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final UUID DEFAULT_SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final Comparator<Integer> NULLABLE_PRIORITY_COMPARATOR = Comparator.nullsLast(Comparator.naturalOrder());
 
     private final VehicleTypeRepository vehicleTypeRepository;
     private final ParkingSessionRepository parkingSessionRepository;
@@ -39,7 +40,7 @@ public class VehicleTypeController {
         validateUniquenessForCreate(vehicleType);
 
         if (vehicleType.getCreatedBy() == null) {
-            vehicleType.setCreatedBy(DEFAULT_USER);
+            vehicleType.setCreatedBy(DEFAULT_SYSTEM_USER_ID);
         }
         if (vehicleType.getUpdatedBy() == null) {
             vehicleType.setUpdatedBy(vehicleType.getCreatedBy());
@@ -104,7 +105,7 @@ public class VehicleTypeController {
         existing.setRequiresManualApproval(Boolean.TRUE.equals(updated.getRequiresManualApproval()));
         existing.setPriorityOrder(updated.getPriorityOrder());
         existing.setStatus(updated.getStatus().toLowerCase(Locale.ROOT));
-        existing.setUpdatedBy(updated.getUpdatedBy() != null ? updated.getUpdatedBy() : DEFAULT_USER);
+        existing.setUpdatedBy(updated.getUpdatedBy() != null ? updated.getUpdatedBy() : DEFAULT_SYSTEM_USER_ID);
 
         return ResponseEntity.ok(vehicleTypeRepository.save(existing));
     }
@@ -120,7 +121,7 @@ public class VehicleTypeController {
         validateDeactivationRule(existing.getVehicleTypeId(), existing.getStatus(), requestedStatus);
 
         existing.setStatus(requestedStatus);
-        existing.setUpdatedBy(body.getUpdatedBy() != null ? body.getUpdatedBy() : DEFAULT_USER);
+        existing.setUpdatedBy(body.getUpdatedBy() != null ? body.getUpdatedBy() : DEFAULT_SYSTEM_USER_ID);
         return ResponseEntity.ok(vehicleTypeRepository.save(existing));
     }
 
@@ -128,8 +129,7 @@ public class VehicleTypeController {
     public ResponseEntity<List<VehicleType>> listPublicActiveVehicleTypes() {
         List<VehicleType> activeTypes = vehicleTypeRepository.findByStatusIgnoreCase(STATUS_ACTIVE);
         activeTypes.sort((a, b) -> {
-            Comparator<Integer> nullableIntComparator = Comparator.nullsLast(Comparator.naturalOrder());
-            int byPriority = nullableIntComparator.compare(a.getPriorityOrder(), b.getPriorityOrder());
+            int byPriority = NULLABLE_PRIORITY_COMPARATOR.compare(a.getPriorityOrder(), b.getPriorityOrder());
             if (byPriority != 0) {
                 return byPriority;
             }

@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = VehicleTypeController.class, properties = "server.servlet.context-path=")
 @Import(com.parking.pbms.exception.GlobalExceptionHandler.class)
 class VehicleTypeControllerTest {
+    private static final UUID DEFAULT_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,8 +66,8 @@ class VehicleTypeControllerTest {
                 .name("Motorbike")
                 .status("active")
                 .requiresManualApproval(false)
-                .createdBy(UUID.fromString("00000000-0000-0000-0000-000000000000"))
-                .updatedBy(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                .createdBy(DEFAULT_USER_ID)
+                .updatedBy(DEFAULT_USER_ID)
                 .build();
 
         when(vehicleTypeRepository.existsByCodeIgnoreCase("MOTORBIKE")).thenReturn(false);
