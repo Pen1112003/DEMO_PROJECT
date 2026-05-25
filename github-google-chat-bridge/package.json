@@ -1,7 +1,7 @@
 {
-  "name": "github-zalo-bridge",
+  "name": "github-google-chat-bridge",
   "version": "1.0.0",
-  "description": "Standalone GitHub Webhooks to Zalo OA notification bridge microservice",
+  "description": "Standalone GitHub Webhooks to Google Chat notification bridge microservice",
   "main": "index.js",
   "type": "module",
   "scripts": {
