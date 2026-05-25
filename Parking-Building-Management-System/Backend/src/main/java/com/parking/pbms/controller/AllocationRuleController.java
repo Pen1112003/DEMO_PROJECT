@@ -155,8 +155,7 @@ public class AllocationRuleController {
     }
 
     private void validateTargetAreaProvided(AllocationRule rule) {
-        if ((rule.getFloorId() == null || rule.getFloorId().toString().isEmpty()) &&
-            (rule.getZoneId() == null || rule.getZoneId().toString().isEmpty())) {
+        if (rule.getFloorId() == null && rule.getZoneId() == null) {
             throw new IllegalArgumentException(
                     "At least one of floorId or zoneId must be provided");
         }
