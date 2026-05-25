@@ -1,41 +1,73 @@
-# Frontend Role Guide
+# React + TypeScript + Vite
 
-## Role Scope
-Frontend is responsible for:
-- UI screens, forms, dashboards, and interaction flows by FR.
-- Client-side validations and UX state handling.
-- Integration with backend APIs and error feedback display.
-- Consistent role-based UI behavior (Manager/Staff/Driver/Admin).
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## How to Use This Role
-1. Pick the assigned FR issue (`FR-xxx`) from GitHub Project.
-2. Read FR spec in `doc/` and map required screens/components.
-3. Build UI flow in this order: layout -> interaction -> API integration -> error states.
-4. Keep field names and payloads aligned with backend contract.
-5. Update issue with screenshots or flow notes before opening PR.
+Currently, two official plugins are available:
 
-## Frontend Development Rules
-- Implement by FR boundary; avoid unrelated UI changes in the same PR.
-- Include loading, empty, success, and error states for each async action.
-- Enforce input validation before request submission.
-- Keep permission-sensitive actions hidden/disabled based on role.
-- Use consistent labels, status text, and feedback patterns.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Push and Branch Rules
-1. Branch naming:
-   - `fe/fr-xxx-short-name`
-2. Commit naming:
-   - `FE FR-xxx: <short summary>`
-3. Push flow:
-   - Push branch to origin.
-   - Open PR to `main`.
-   - Link FR issue and include UI change summary.
-4. Merge policy:
-   - Require review approval.
-   - No direct push to `main`.
+## React Compiler
 
-## PR Checklist (Frontend)
-- Linked FR issue.
-- Screens/components changed are listed.
-- API integration points are listed.
-- UX states and validation behavior are described.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```

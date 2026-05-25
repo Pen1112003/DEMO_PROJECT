@@ -1,0 +1,55 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch, title, and issue reference
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const head = pr.head.ref;
+            const base = pr.base.ref;
+            const title = pr.title || "";
+            const body = pr.body || "";
+
+            const allowedBase = ["developement", "main"];
+            const branchPatterns = [
+              /^(be|fe)\/fr-\d{3}-issue-\d+-.+/,
+              /^(be|fe)-fr-\d{3}-issue-\d+-.+/,
+              /^dev\/fr-\d{3}-issue-\d+-.+/,
+              /^development\/fr-\d{3}-issue-\d+-.+/
+            ];
+
+            const errors = [];
+
+            if (!allowedBase.includes(base)) {
+              errors.push(`Base branch must be one of: ${allowedBase.join(", ")}. Got: ${base}`);
+            }
+
+            if (!branchPatterns.some((r) => r.test(head))) {
+              errors.push(
+                `Head branch is not valid: ${head}. Expected BE/FE/DEV FR format (e.g. be/fr-001-issue-146-..., fe-fr-001-issue-146-..., dev/fr-001-issue-146-...).`
+              );
+            }
+
+            if (!/FR-\d{3}/i.test(title)) {
+              errors.push(`PR title must include FR ID (e.g. FR-001). Current title: ${title}`);
+            }
+
+            if (!/(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?)\s+#\d+/i.test(body)) {
+              errors.push("PR body must reference an issue, e.g. `Refs #146` or `Closes #146`.");
+            }
+
+            if (errors.length) {
+              core.setFailed(errors.join("\n"));
+            }
