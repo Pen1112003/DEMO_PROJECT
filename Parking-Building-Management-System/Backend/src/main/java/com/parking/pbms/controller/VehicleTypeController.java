@@ -30,6 +30,7 @@ public class VehicleTypeController {
     private static final String STATUS_INACTIVE = "inactive";
     private static final UUID DEFAULT_SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private static final Comparator<Integer> NULLABLE_PRIORITY_COMPARATOR = Comparator.nullsLast(Comparator.naturalOrder());
+    private static final Set<String> SUPPORTED_SORT_FIELDS = Set.of("priorityOrder", "name", "updatedAt");
 
     private final VehicleTypeRepository vehicleTypeRepository;
     private final ParkingSessionRepository parkingSessionRepository;
@@ -102,7 +103,7 @@ public class VehicleTypeController {
         existing.setMaxLengthCm(updated.getMaxLengthCm());
         existing.setDefaultAllocationRuleId(updated.getDefaultAllocationRuleId());
         existing.setDefaultPricingPolicyId(updated.getDefaultPricingPolicyId());
-        existing.setRequiresManualApproval(Boolean.TRUE.equals(updated.getRequiresManualApproval()));
+        existing.setRequiresManualApproval(updated.isRequiresManualApproval());
         existing.setPriorityOrder(updated.getPriorityOrder());
         existing.setStatus(updated.getStatus().toLowerCase(Locale.ROOT));
         existing.setUpdatedBy(updated.getUpdatedBy() != null ? updated.getUpdatedBy() : DEFAULT_SYSTEM_USER_ID);
@@ -148,8 +149,6 @@ public class VehicleTypeController {
         if (vehicleType.getStatus() != null) {
             vehicleType.setStatus(vehicleType.getStatus().trim().toLowerCase(Locale.ROOT));
         }
-        vehicleType.setRequiresManualApproval(Boolean.TRUE.equals(vehicleType.getRequiresManualApproval()));
-
         validateCode(vehicleType.getCode());
         validateStatus(vehicleType.getStatus());
     }
@@ -218,8 +217,7 @@ public class VehicleTypeController {
     }
 
     private Sort buildSort(String sortBy, String sortDir) {
-        Set<String> supportedSortFields = Set.of("priorityOrder", "name", "updatedAt");
-        String resolvedSortBy = supportedSortFields.contains(sortBy) ? sortBy : "priorityOrder";
+        String resolvedSortBy = SUPPORTED_SORT_FIELDS.contains(sortBy) ? sortBy : "priorityOrder";
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         return Sort.by(new Sort.Order(direction, resolvedSortBy).nullsLast());
     }

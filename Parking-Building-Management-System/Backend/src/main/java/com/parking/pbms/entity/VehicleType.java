@@ -65,7 +65,7 @@ public class VehicleType {
 
     @Column(name = "requires_manual_approval", nullable = false)
     @Builder.Default
-    private Boolean requiresManualApproval = false;
+    private boolean requiresManualApproval = false;
 
     @PositiveOrZero(message = "Priority order must be non-negative")
     @Column(name = "priority_order")
