@@ -3,166 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitBridge Desktop Console - Trực quan hóa tiến độ GitHub</title>
+  <title>GitBridge Server Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Background Glows -->
-  <div class="glow-sphere glow-1"></div>
-  <div class="glow-sphere glow-2"></div>
-
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="logo-area">
-        <div class="logo-icon">🚀</div>
-        <div class="logo-text">
-          <h1>GitBridge</h1>
-          <span>Console v1.0.0</span>
-        </div>
+  <div class="console-wrapper">
+    <!-- Header -->
+    <header class="console-header">
+      <div class="brand">
+        <span class="pulse-indicator"></span>
+        <h1>GitBridge Service</h1>
       </div>
+      <div class="server-badge">Port: 3000</div>
+    </header>
 
-      <nav class="nav-menu">
-        <button class="nav-item active" id="btn-feed">
-          <span class="icon">💬</span> Notification Feed
-        </button>
-        <button class="nav-item" id="btn-metrics">
-          <span class="icon">📊</span> Project Metrics
-        </button>
-        <button class="nav-item" id="btn-settings">
-          <span class="icon">⚙️</span> Connection Status
-        </button>
-      </nav>
-
-      <!-- GitHub Profile Area -->
-      <div class="github-profile-area" id="profile-area">
-        <div class="profile-logged-out" id="profile-logged-out">
-          <button class="btn-github-login" id="btn-login">
-            <svg class="gh-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.35 3.12.88.01.64.01 1.11.01 1.28 0 .21-.15.46-.55.38A8.013 8.013 0 0 1 0 8c0-4.42 3.58-8 8-8z"></path></svg>
-            Connect GitHub
-          </button>
-        </div>
-        <div class="profile-logged-in hidden" id="profile-logged-in">
-          <img src="https://avatars.githubusercontent.com/u/108394464?v=4" alt="GitHub Avatar" class="user-avatar" id="user-avatar">
-          <div class="user-info">
-            <span class="user-name" id="user-name">@Pen1112003</span>
-            <span class="user-role">Developer Owner</span>
-          </div>
-          <button class="btn-logout" id="btn-logout" title="Đăng xuất">❌</button>
-        </div>
+    <!-- Status Grid -->
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="label">Server Status</span>
+        <span class="value text-success">ONLINE</span>
       </div>
-    </aside>
+      <div class="status-card">
+        <span class="label">macOS Native Notifications</span>
+        <span class="value text-success" id="mac-alert-status">ACTIVE</span>
+      </div>
+      <div class="status-card">
+        <span class="label">Total Webhooks Processed</span>
+        <span class="value" id="webhook-count">0</span>
+      </div>
+    </div>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <!-- Top Navigation Bar -->
-      <header class="top-bar">
-        <div class="status-indicator">
-          <span class="status-dot pulsing" id="connection-dot"></span>
-          <span class="status-text" id="connection-status">Connecting to stream...</span>
-        </div>
-        
-        <div class="quick-stats">
-          <div class="stat-bubble">
-            <span class="stat-label">Events:</span>
-            <span class="stat-val" id="count-events">0</span>
-          </div>
-          <div class="stat-bubble">
-            <span class="stat-label">Project:</span>
-            <span class="stat-val">PBMS #14</span>
-          </div>
-        </div>
-      </header>
+    <!-- Simulation Header -->
+    <div class="section-title">
+      <h2>Local Webhook Emulation</h2>
+      <p>Simulate GitHub webhook calls directly to verify macOS Native Notifications.</p>
+    </div>
 
-      <!-- View: Notification Feed -->
-      <section class="content-view active" id="view-feed-container">
-        <div class="view-header">
-          <h2>GitHub Real-Time Activities</h2>
-          <p>Nhận và tương tác trực tiếp với tiến trình lập trình từ xa của nhóm của bạn.</p>
-        </div>
+    <!-- Sim Buttons -->
+    <div class="sim-actions">
+      <button class="btn-action" onclick="simulateEvent('project_v2_item')">Trigger Project Task Transition</button>
+      <button class="btn-action" onclick="simulateEvent('pull_request')">Trigger Pull Request Opened</button>
+      <button class="btn-action" onclick="simulateEvent('issues')">Trigger Issue Opened</button>
+    </div>
 
-        <!-- Simulation Tools Box -->
-        <div class="simulation-box">
-          <span class="sim-title">⚡ Mô phỏng sự kiện nhanh:</span>
-          <button class="btn-sim" onclick="simulateEvent('project_v2_item')">📋 Đổi Status Task</button>
-          <button class="btn-sim" onclick="simulateEvent('pull_request')">🚀 Tạo Mới PR</button>
-          <button class="btn-sim" onclick="simulateEvent('issues')">⚠️ Mở Issue</button>
-        </div>
+    <!-- Log Section -->
+    <div class="section-title">
+      <h2>Server Logs & Received Events</h2>
+    </div>
 
-        <!-- Feed List -->
-        <div class="feed-list" id="feed-list">
-          <div class="empty-state" id="empty-state">
-            <div class="empty-icon">📡</div>
-            <h3>Chưa có hoạt động nào được ghi nhận</h3>
-            <p>Hãy kích hoạt webhook trên GitHub hoặc nhấn các nút **Mô phỏng sự kiện nhanh** ở trên để kiểm tra dòng dữ liệu thời gian thực!</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- View: Project Metrics -->
-      <section class="content-view hidden" id="view-metrics-container">
-        <div class="view-header">
-          <h2>Project Metrics</h2>
-          <p>Thống kê tiến độ các Requirements thuộc Epic #188 của dự án PBMS.</p>
-        </div>
-        
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <h3>Tổng số Requirement</h3>
-            <span class="metric-big">42</span>
-            <p>Đã liên kết dạng sub-issues dưới Epic #188</p>
-          </div>
-          <div class="metric-card">
-            <h3>Trạng thái Project Board</h3>
-            <div class="progress-bar-container">
-              <div class="progress-bar" style="width: 15%">15%</div>
-            </div>
-            <p>Các task bắt đầu chuyển trạng thái sang In Progress & Ready to Review.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- View: Settings -->
-      <section class="content-view hidden" id="view-settings-container">
-        <div class="view-header">
-          <h2>Server & API Configuration</h2>
-          <p>Trạng thái kết nối microservice và cấu hình biến môi trường cục bộ.</p>
-        </div>
-
-        <div class="settings-card">
-          <h3>Local Environment Stats</h3>
-          <table class="settings-table">
-            <tr>
-              <td>Microservice Link</td>
-              <td><code>http://localhost:3000</code></td>
-            </tr>
-            <tr>
-              <td>Event Source Stream</td>
-              <td><code>http://localhost:3000/api/events</code></td>
-            </tr>
-            <tr>
-              <td>Zalo App ID</td>
-              <td><code>329044399574372477</code></td>
-            </tr>
-            <tr>
-              <td>Zalo Target ID</td>
-              <td><span id="target-id-label">Not Configured (Zalo integration disabled)</span></td>
-            </tr>
-          </table>
-        </div>
-      </section>
-    </main>
+    <div class="log-console">
+      <div class="log-line system-msg">[SYSTEM] GitBridge server listening on port 3000. Listening for events...</div>
+      <div class="log-line system-msg">[SYSTEM] macOS native notification system successfully initialized.</div>
+      <div id="log-list"></div>
+    </div>
   </div>
 
-  <!-- Notification Audio Synth Info -->
-  <div class="sound-toggle-btn" id="btn-sound-toggle" title="Âm thanh thông báo: Đang bật">
-    🔊
-  </div>
-
-  <!-- Quick Feedback Toast -->
   <div class="toast hidden" id="feedback-toast"></div>
 </body>
 </html>

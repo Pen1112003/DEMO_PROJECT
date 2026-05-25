@@ -2,6 +2,7 @@ import express from 'express';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +38,7 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-// Broadcast helper
+// Broadcast helper for SSE clients
 function broadcastEvent(eventType, message, payload) {
   const dataPayload = {
     id: Date.now(),
@@ -52,6 +53,23 @@ function broadcastEvent(eventType, message, payload) {
   });
 }
 
+// Native macOS Desktop Notification Helper
+function sendNativeNotification(title, subtitle, body) {
+  const cleanTitle = title.replace(/"/g, '\\"').replace(/'/g, "\\'");
+  const cleanSubtitle = subtitle.replace(/"/g, '\\"').replace(/'/g, "\\'");
+  const cleanBody = body.replace(/"/g, '\\"').replace(/'/g, "\\'");
+  
+  const appleScript = `display notification "${cleanBody}" with title "${cleanTitle}" subtitle "${cleanSubtitle}"`;
+  
+  exec(`osascript -e '${appleScript}'`, (err) => {
+    if (err) {
+      console.error('[macOS Alert] Failed to trigger native notification:', err.message);
+    } else {
+      console.log(`[macOS Alert] Native desktop notification displayed.`);
+    }
+  });
+}
+
 app.post('/webhooks/github', async (req, res) => {
   const eventType = req.headers['x-github-event'];
   const payload = req.body;
@@ -60,23 +78,59 @@ app.post('/webhooks/github', async (req, res) => {
 
   try {
     let message = null;
+    let notifyTitle = 'GitHub Notification';
+    let notifySubtitle = '';
+    let notifyBody = '';
 
     if (eventType === 'project_v2_item') {
       message = parseProjectV2ItemEvent(payload);
+      if (payload.action === 'edited' && payload.changes && payload.changes.field_value) {
+        const developer = payload.sender ? payload.sender.login : 'Developer';
+        const taskTitle = payload.project_v2_item ? (payload.project_v2_item.content_title || 'Task') : 'Task';
+        const fromStatus = payload.changes.field_value.from || 'Todo';
+        const toStatus = payload.changes.field_value.to || 'In Progress';
+        
+        notifyTitle = '📋 Project Board - PBMS';
+        notifySubtitle = `@${developer} updated task status`;
+        notifyBody = `${taskTitle} (${fromStatus} -> ${toStatus})`;
+      }
     } else if (eventType === 'pull_request') {
       message = parsePullRequestEvent(payload);
+      const developer = payload.sender ? payload.sender.login : 'Developer';
+      const title = payload.pull_request ? payload.pull_request.title : 'PR';
+      
+      notifyTitle = '🚀 Pull Request';
+      if (payload.action === 'opened') {
+        notifySubtitle = `New PR by @${developer}`;
+        notifyBody = title;
+      } else if (payload.action === 'closed') {
+        const statusStr = payload.pull_request && payload.pull_request.merged ? 'Merged' : 'Closed';
+        notifySubtitle = `PR ${statusStr} by @${developer}`;
+        notifyBody = title;
+      }
     } else if (eventType === 'issues') {
       message = parseIssueEvent(payload);
+      const developer = payload.sender ? payload.sender.login : 'Developer';
+      const title = payload.issue ? payload.issue.title : 'Issue';
+      
+      notifyTitle = '⚠️ Issue Opened';
+      notifySubtitle = `New issue from @${developer}`;
+      notifyBody = title;
     }
 
     if (message) {
       console.log(`Formatted Message: \n${message}`);
       
-      // Send to Zalo (if configured)
+      // 1. Send to Zalo (if configured)
       await sendToZalo(message);
       
-      // Broadcast real-time message to our own custom GitBridge UI client!
+      // 2. Broadcast to browser SSE console
       broadcastEvent(eventType, message, payload);
+      
+      // 3. Trigger native macOS desktop system notification popup!
+      if (notifyTitle && notifyBody) {
+        sendNativeNotification(notifyTitle, notifySubtitle, notifyBody);
+      }
     }
 
     return res.status(200).send('Webhook processed successfully');
