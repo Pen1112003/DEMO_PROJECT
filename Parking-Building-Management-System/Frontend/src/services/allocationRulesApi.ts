@@ -1,5 +1,5 @@
 import { api } from './api';
-import { AllocationRule } from '../types';
+import type { AllocationRule } from '../types';
 
 export const allocationRulesApi = {
   /**
