@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -54,6 +55,45 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(envelope, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorEnvelope> handleConflictException(ConflictException ex) {
+        ErrorEnvelope envelope = ErrorEnvelope.builder()
+                .error(ErrorDetails.builder()
+                        .code("CONFLICT")
+                        .message(ex.getMessage())
+                        .details(new ArrayList<>())
+                        .build())
+                .build();
+
+        return new ResponseEntity<>(envelope, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorEnvelope> handleBadRequestException(IllegalArgumentException ex) {
+        ErrorEnvelope envelope = ErrorEnvelope.builder()
+                .error(ErrorDetails.builder()
+                        .code("BAD_REQUEST")
+                        .message(ex.getMessage())
+                        .details(new ArrayList<>())
+                        .build())
+                .build();
+
+        return new ResponseEntity<>(envelope, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorEnvelope> handleNotFoundException(NoSuchElementException ex) {
+        ErrorEnvelope envelope = ErrorEnvelope.builder()
+                .error(ErrorDetails.builder()
+                        .code("NOT_FOUND")
+                        .message(ex.getMessage())
+                        .details(new ArrayList<>())
+                        .build())
+                .build();
+
+        return new ResponseEntity<>(envelope, HttpStatus.NOT_FOUND);
     }
 
     // General Fallback Handler
