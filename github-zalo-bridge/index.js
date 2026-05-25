@@ -15,9 +15,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
 
-// Load credentials from environment variables
-const ZALO_ACCESS_TOKEN = process.env.ZALO_ACCESS_TOKEN || 'YOUR_ZALO_OA_ACCESS_TOKEN';
-const ZALO_GROUP_ID = process.env.ZALO_GROUP_ID || 'YOUR_ZALO_GROUP_CHAT_ID';
+// Load Google Chat credentials from environment
+const GOOGLE_CHAT_WEBHOOK_URL = process.env.GOOGLE_CHAT_WEBHOOK_URL || 'YOUR_GOOGLE_CHAT_WEBHOOK_URL';
 
 // In-memory clients for Server-Sent Events (SSE) real-time streaming
 let sseClients = [];
@@ -49,7 +48,7 @@ function broadcastEvent(eventType, message, payload) {
   };
   
   sseClients.forEach(client => {
-    client.write(`data: ${JSON.stringify(dataPayload)}\n\n`);
+    client.write('data: ' + JSON.stringify(dataPayload) + '\n\n');
   });
 }
 
@@ -119,10 +118,10 @@ app.post('/webhooks/github', async (req, res) => {
     }
 
     if (message) {
-      console.log(`Formatted Message: \n${message}`);
+      console.log(`Formatted Message for Google Chat: \n${message}`);
       
-      // 1. Send to Zalo (if configured)
-      await sendToZalo(message);
+      // 1. Send to Google Chat
+      await sendToGoogleChat(message);
       
       // 2. Broadcast to browser SSE console
       broadcastEvent(eventType, message, payload);
@@ -138,14 +137,6 @@ app.post('/webhooks/github', async (req, res) => {
     console.error('Error processing GitHub webhook:', error.message);
     return res.status(500).send(`Error: ${error.message}`);
   }
-});
-
-// Zalo Webhook helper to log user interactions (helpful to capture User IDs)
-app.post('/webhooks/zalo', (req, res) => {
-  console.log('--- Received Zalo Webhook Payload ---');
-  console.log(JSON.stringify(req.body, null, 2));
-  console.log('------------------------------------');
-  return res.status(200).send({ error: 0, message: 'Success' });
 });
 
 function parseProjectV2ItemEvent(payload) {
@@ -167,11 +158,11 @@ function parseProjectV2ItemEvent(payload) {
     else if (toStatus.toLowerCase() === 'ready to review') emoji = '🟡';
     else if (toStatus.toLowerCase() === 'done') emoji = '🟢';
 
-    return `🔔 [THÔNG BÁO DỰ ÁN - PBMS]\n` +
-           `👤 Lập trình viên: @${developer} vừa chuyển trạng thái công việc:\n` +
-           `📋 Task: ${taskTitle}\n` +
-           `🔄 Trạng thái: ${fromStatus} ➡️ ${toStatus} ${emoji}\n` +
-           `🔗 Xem chi tiết trên GitProject: https://github.com/users/Pen1112003/projects/14`;
+    return `🔔 *[THÔNG BÁO DỰ ÁN - PBMS]*\n` +
+           `👤 *Lập trình viên:* @${developer} vừa chuyển trạng thái công việc:\n` +
+           `📋 *Task:* ${taskTitle}\n` +
+           `🔄 *Trạng thái:* \`${fromStatus}\` ➡️ *\`${toStatus}\`* ${emoji}\n` +
+           `🔗 *Xem chi tiết trên GitProject:* https://github.com/users/Pen1112003/projects/14`;
   }
 
   return null;
@@ -186,18 +177,18 @@ function parsePullRequestEvent(payload) {
   const developer = sender ? sender.login : 'Lập trình viên';
 
   if (action === 'opened') {
-    return `🚀 [PULL REQUEST MỚI ĐƯỢC TẠO]\n` +
-           `👤 Người tạo: @${developer}\n` +
-           `📝 Tiêu đề: ${title}\n` +
-           `🚦 Trạng thái: Đang chờ kiểm duyệt 🟡\n` +
-           `🔗 Xem chi tiết: ${prUrl}`;
+    return `🚀 *[PULL REQUEST MỚI ĐƯỢC TẠO]*\n` +
+           `👤 *Người tạo:* @${developer}\n` +
+           `📝 *Tiêu đề:* ${title}\n` +
+           `🚦 *Trạng thái:* Đang chờ kiểm duyệt 🟡\n` +
+           `🔗 *Xem chi tiết:* ${prUrl}`;
   } else if (action === 'closed') {
     const status = pull_request.merged ? 'Đã được MERGE vào main 🟢' : 'Đã bị ĐÓNG (Không merge) 🔴';
-    return `🏁 [PULL REQUEST ĐÃ KẾT THÚC]\n` +
-           `👤 Người xử lý: @${developer}\n` +
-           `📝 Tiêu đề: ${title}\n` +
-           `🚦 Kết quả: ${status}\n` +
-           `🔗 Xem chi tiết: ${prUrl}`;
+    return `🏁 *[PULL REQUEST ĐÃ KẾT THÚC]*\n` +
+           `👤 *Người xử lý:* @${developer}\n` +
+           `📝 *Tiêu đề:* ${title}\n` +
+           `🚦 *Kết quả:* ${status}\n` +
+           `🔗 *Xem chi tiết:* ${prUrl}`;
   }
   return null;
 }
@@ -211,49 +202,42 @@ function parseIssueEvent(payload) {
   const developer = sender ? sender.login : 'Lập trình viên';
 
   if (action === 'opened') {
-    return `⚠️ [PHÁT SINH CÔNG VIỆC/YÊU CẦU MỚI]\n` +
-           `👤 Người tạo: @${developer}\n` +
-           `📋 Nội dung: ${title}\n` +
-           `🚦 Trạng thái: Mở mới (Opened) 🔴\n` +
-           `🔗 Xem chi tiết: ${issueUrl}`;
+    return `⚠️ *[PHÁT SINH CÔNG VIỆC/YÊU CẦU MỚI]*\n` +
+           `👤 *Người tạo:* @${developer}\n` +
+           `📋 *Nội dung:* ${title}\n` +
+           `🚦 *Trạng thái:* Mở mới (Opened) 🔴\n` +
+           `🔗 *Xem chi tiết:* ${issueUrl}`;
   }
   return null;
 }
 
-async function sendToZalo(text) {
-  if (ZALO_ACCESS_TOKEN === 'YOUR_ZALO_OA_ACCESS_TOKEN' || ZALO_GROUP_ID === 'YOUR_ZALO_GROUP_CHAT_ID') {
-    console.warn('Zalo integration is not fully configured. Skipping API request.');
+async function sendToGoogleChat(text) {
+  if (GOOGLE_CHAT_WEBHOOK_URL === 'YOUR_GOOGLE_CHAT_WEBHOOK_URL') {
+    console.warn('[Google Chat] Integration not configured. Skipping API request.');
     return;
   }
 
   try {
-    const url = 'https://openapi.zalo.me/v2.0/oa/message';
     const payload = {
-      recipient: {
-        chat_id: ZALO_GROUP_ID
-      },
-      message: {
-        text: text
-      }
+      text: text
     };
 
-    const response = await axios.post(url, payload, {
+    const response = await axios.post(GOOGLE_CHAT_WEBHOOK_URL, payload, {
       headers: {
-        'Content-Type': 'application/json',
-        'access_token': ZALO_ACCESS_TOKEN
+        'Content-Type': 'application/json; charset=UTF-8'
       }
     });
 
-    if (response.data && response.data.error === 0) {
-      console.log('Successfully sent notification to Zalo.');
+    if (response.status === 200 || response.status === 201) {
+      console.log('[Google Chat] Notification delivered successfully.');
     } else {
-      console.error('Failed to send to Zalo. Response payload:', response.data);
+      console.error('[Google Chat] Unexpected response status:', response.status);
     }
   } catch (error) {
-    console.error('Failed to execute Zalo API call:', error.message);
+    console.error('[Google Chat] API call failed:', error.message);
   }
 }
 
 app.listen(PORT, () => {
-  console.log(`GitHub to Zalo Bridge microservice listening on port ${PORT}`);
+  console.log(`GitHub to Google Chat Bridge microservice listening on port ${PORT}`);
 });
