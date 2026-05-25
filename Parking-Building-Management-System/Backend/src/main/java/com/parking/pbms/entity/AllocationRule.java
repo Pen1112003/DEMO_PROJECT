@@ -76,7 +76,6 @@ public class AllocationRule {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @NotNull(message = "Created by user ID is required")
     @Column(name = "created_by", nullable = false)
     private UUID createdBy;
 
@@ -84,7 +83,6 @@ public class AllocationRule {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @NotNull(message = "Updated by user ID is required")
     @Column(name = "updated_by", nullable = false)
     private UUID updatedBy;
 }
