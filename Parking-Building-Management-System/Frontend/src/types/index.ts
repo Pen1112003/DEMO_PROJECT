@@ -29,6 +29,24 @@ export interface ParkingFacility {
   updatedAt: string;
 }
 
+export interface VehicleType {
+  vehicleTypeId: string;
+  code: string;
+  name: string;
+  description?: string;
+  wheelCount?: number;
+  maxHeightCm?: number;
+  maxWidthCm?: number;
+  maxLengthCm?: number;
+  defaultAllocationRuleId?: string;
+  defaultPricingPolicyId?: string;
+  requiresManualApproval: boolean;
+  priorityOrder?: number;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ParkingSlot {
   slotId: string;
   zoneId: string;
@@ -52,4 +70,24 @@ export interface ParkingSession {
   totalPaid?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AllocationRule {
+  ruleId: string;
+  facilityId: string;
+  vehicleTypeId: string;
+  floorId?: string;
+  zoneId?: string;
+  priorityOrder: number;
+  maxConcurrentSlots?: number;
+  overflowZoneId?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  isDefault: boolean;
+  status: 'active' | 'inactive';
+  notes?: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
 }
