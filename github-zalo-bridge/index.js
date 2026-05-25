@@ -1,14 +1,56 @@
 import express from 'express';
 import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+
+// Serve static assets for our custom GitBridge Desktop Console
+app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
 
 // Load credentials from environment variables
 const ZALO_ACCESS_TOKEN = process.env.ZALO_ACCESS_TOKEN || 'YOUR_ZALO_OA_ACCESS_TOKEN';
 const ZALO_GROUP_ID = process.env.ZALO_GROUP_ID || 'YOUR_ZALO_GROUP_CHAT_ID';
+
+// In-memory clients for Server-Sent Events (SSE) real-time streaming
+let sseClients = [];
+
+// SSE endpoint to stream real-time webhook updates to the browser console
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  sseClients.push(res);
+  console.log(`[SSE] Client connected. Total clients: ${sseClients.length}`);
+
+  req.on('close', () => {
+    sseClients = sseClients.filter(client => client !== res);
+    console.log(`[SSE] Client disconnected. Total clients: ${sseClients.length}`);
+  });
+});
+
+// Broadcast helper
+function broadcastEvent(eventType, message, payload) {
+  const dataPayload = {
+    id: Date.now(),
+    eventType,
+    message,
+    timestamp: new Date().toLocaleTimeString(),
+    raw: payload
+  };
+  
+  sseClients.forEach(client => {
+    client.write(`data: ${JSON.stringify(dataPayload)}\n\n`);
+  });
+}
 
 app.post('/webhooks/github', async (req, res) => {
   const eventType = req.headers['x-github-event'];
@@ -28,8 +70,13 @@ app.post('/webhooks/github', async (req, res) => {
     }
 
     if (message) {
-      console.log(`Formatted Message for Zalo: \n${message}`);
+      console.log(`Formatted Message: \n${message}`);
+      
+      // Send to Zalo (if configured)
       await sendToZalo(message);
+      
+      // Broadcast real-time message to our own custom GitBridge UI client!
+      broadcastEvent(eventType, message, payload);
     }
 
     return res.status(200).send('Webhook processed successfully');
@@ -121,8 +168,7 @@ function parseIssueEvent(payload) {
 
 async function sendToZalo(text) {
   if (ZALO_ACCESS_TOKEN === 'YOUR_ZALO_OA_ACCESS_TOKEN' || ZALO_GROUP_ID === 'YOUR_ZALO_GROUP_CHAT_ID') {
-    console.warn('Zalo integration is not fully configured. Skipping API request. Message content:');
-    console.log(text);
+    console.warn('Zalo integration is not fully configured. Skipping API request.');
     return;
   }
 
