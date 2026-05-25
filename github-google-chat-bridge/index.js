@@ -196,6 +196,20 @@ app.post('/webhooks/github', async (req, res) => {
         notifyBody = title;
         textFallbackMessage = `🔄 Issue reopened by @${developer}: ${title}`;
         statusStr = 'Reopened 🟡';
+      } else if (payload.action === 'assigned') {
+        const assignee = payload.assignee ? payload.assignee.login : 'Member';
+        notifyTitle = '👤 Task Assigned';
+        notifySubtitle = `@${developer} assigned this task`;
+        notifyBody = `${title} -> Assigned to @${assignee}`;
+        textFallbackMessage = `👤 Task assigned to @${assignee} by @${developer}: ${title}`;
+        statusStr = `Assigned to <b>@${assignee}</b> 👤`;
+      } else if (payload.action === 'unassigned') {
+        const assignee = payload.assignee ? payload.assignee.login : 'Member';
+        notifyTitle = '👤 Task Unassigned';
+        notifySubtitle = `@${developer} removed assignee`;
+        notifyBody = `${title} -> Removed @${assignee}`;
+        textFallbackMessage = `👤 @${assignee} removed from task by @${developer}: ${title}`;
+        statusStr = `Unassigned (Removed <s>@${assignee}</s>)`;
       }
 
       if (message) {
@@ -377,6 +391,20 @@ function parseIssueEvent(payload) {
            `👤 *Người mở lại:* @${developer}\n` +
            `📋 *Nội dung:* ${title}\n` +
            `🚦 *Trạng thái:* Mở lại (Reopened) 🟡\n` +
+           `🔗 *Xem chi tiết:* ${issueUrl}`;
+  } else if (action === 'assigned') {
+    const assignee = payload.assignee ? payload.assignee.login : 'Thành viên';
+    return `👤 *[BÀN GIAO CÔNG VIỆC]*\n` +
+           `👤 *Người giao:* @${developer}\n` +
+           `📋 *Nội dung:* ${title}\n` +
+           `🎯 *Người thực hiện:* *@${assignee}* 👤\n` +
+           `🔗 *Xem chi tiết:* ${issueUrl}`;
+  } else if (action === 'unassigned') {
+    const assignee = payload.assignee ? payload.assignee.login : 'Thành viên';
+    return `👤 *[RÚT BÀN GIAO CÔNG VIỆC]*\n` +
+           `👤 *Người thực hiện hành động:* @${developer}\n` +
+           `📋 *Nội dung:* ${title}\n` +
+           `❌ *Thành viên bị rút:* ~@${assignee}~\n` +
            `🔗 *Xem chi tiết:* ${issueUrl}`;
   }
   return null;
