@@ -39,6 +39,14 @@ app.post('/webhooks/github', async (req, res) => {
   }
 });
 
+// Zalo Webhook helper to log user interactions (helpful to capture User IDs)
+app.post('/webhooks/zalo', (req, res) => {
+  console.log('--- Received Zalo Webhook Payload ---');
+  console.log(JSON.stringify(req.body, null, 2));
+  console.log('------------------------------------');
+  return res.status(200).send({ error: 0, message: 'Success' });
+});
+
 function parseProjectV2ItemEvent(payload) {
   const { action, sender, project_v2_item, changes } = payload;
   if (action !== 'edited' || !changes || !changes.field_value) return null;
