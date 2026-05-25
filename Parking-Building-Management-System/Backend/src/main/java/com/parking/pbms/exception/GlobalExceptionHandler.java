@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorEnvelope> handleConflictException(ConflictException ex) {
         ErrorEnvelope envelope = ErrorEnvelope.builder()
                 .error(ErrorDetails.builder()
-                        .code("CONFLICT")
+                        .code(ex.getCode())
                         .message(ex.getMessage())
                         .details(new ArrayList<>())
                         .build())
