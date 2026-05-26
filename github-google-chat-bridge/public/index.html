@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitBridge Server Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="console-wrapper">
+    <!-- Header -->
+    <header class="console-header">
+      <div class="brand">
+        <span class="pulse-indicator"></span>
+        <h1>GitBridge Service</h1>
+      </div>
+      <div class="server-badge">Port: 3000</div>
+    </header>
+
+    <!-- Status Grid -->
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="label">Server Status</span>
+        <span class="value text-success">ONLINE</span>
+      </div>
+      <div class="status-card">
+        <span class="label">macOS Native Notifications</span>
+        <span class="value text-success" id="mac-alert-status">ACTIVE</span>
+      </div>
+      <div class="status-card">
+        <span class="label">Total Webhooks Processed</span>
+        <span class="value" id="webhook-count">0</span>
+      </div>
+    </div>
+
+    <!-- Simulation Header -->
+    <div class="section-title">
+      <h2>Local Webhook Emulation</h2>
+      <p>Simulate GitHub webhook calls directly to verify macOS Native Notifications.</p>
+    </div>
+
+    <!-- Sim Buttons -->
+    <div class="sim-actions">
+      <button class="btn-action" onclick="simulateEvent('project_v2_item')">Trigger Project Task Transition</button>
+      <button class="btn-action" onclick="simulateEvent('pull_request')">Trigger Pull Request Opened</button>
+      <button class="btn-action" onclick="simulateEvent('issues')">Trigger Issue Opened</button>
+    </div>
+
+    <!-- Log Section -->
+    <div class="section-title">
+      <h2>Server Logs & Received Events</h2>
+    </div>
+
+    <div class="log-console">
+      <div class="log-line system-msg">[SYSTEM] GitBridge server listening on port 3000. Listening for events...</div>
+      <div class="log-line system-msg">[SYSTEM] macOS native notification system successfully initialized.</div>
+      <div id="log-list"></div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="feedback-toast"></div>
+</body>
+</html>
